@@ -10,24 +10,10 @@ module sdio_slave(
 	inout wire sd_serial,
 	inout wire[3:0] sd_data,
 	
-	//Пока пусть в таком виде будет command interface, потом облагородим
-	
-	//Данные прочитанные из sdio command line
-	output bit[37:0] read_data,
-	output bit read_data_strobe,
-	output bit read_error,
-	
-	//Данные, которые следует отослать по sdio command line
-	input bit[37:0] write_data,
-	input bit write_data_strobe,
-
-	//Количество данных, которые требуется передать.
-	//Пока это временный вариант.
-	input bit write_data4_strobe,
-	input bit[8:0] write_data4_count,
-	
-	output bit read_disabled, //Пока 1 - нельзя передавать команды
-	output bit read_disabled4 //Пока 1 - нельзя передавать данные
+	//Количество данных, которые требуется передать или принять
+	output bit[8:0] data4_count,
+	output bit write_data4_strobe,
+	output bit read_data4_strobe
 );
 
 bit write_enabled;
@@ -37,6 +23,18 @@ assign sd_serial = write_enabled?sd_serial_out:1'bz;
 bit write_enabled4;
 bit[3:0] sd_data_out;
 assign sd_data = write_enabled4?sd_data_out:4'bz;
+
+//Данные прочитанные из sdio command line
+bit[37:0] read_data;
+bit read_data_strobe;
+bit read_error;
+
+//Данные, которые следует отослать по sdio command line
+bit[37:0] write_data;
+bit write_data_strobe;
+
+bit read_disabled; //Пока 1 - нельзя передавать команды
+bit read_disabled4; //Пока 1 - нельзя передавать данные
 
 
 sd_response_stream response(
@@ -82,6 +80,25 @@ sd_response_stream_dat response_dat(
 	.read_disabled(read_disabled4)
 );
 
+sdio_commands_processor sdio_commands(
+	.clock(clock),
+	
+	.read_data(read_data),
+	.read_data_strobe(read_data_strobe),
+	.read_error(read_error),
+	
+	.write_data(write_data),
+	.write_data_strobe(write_data_strobe),
+	
+	.write_data4_strobe(write_data4_strobe),
+	.read_data4_strobe(read_data4_strobe),
+	.data4_count(data4_count),
+	
+	.send_command_in_progress(read_disabled),
+	.send_data_in_progress(read_disabled4)
+);
+
+
 //Временный код, чтобы передать данные.
 always @(posedge clock)
 begin
@@ -89,7 +106,7 @@ begin
 	data_strobe <= 0;
 	if(write_data4_strobe)
 	begin
-		write_count <= write_data4_count;
+		write_count <= data4_count;
 		start_write <= 1'd1;
 		data_empty <= 0;
 	end

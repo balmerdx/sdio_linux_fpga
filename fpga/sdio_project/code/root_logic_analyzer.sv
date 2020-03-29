@@ -21,6 +21,8 @@ module root_logic_analyzer (input clock50mhz,
 
 	
 initial led110 = 0;
+initial led111 = 0;
+initial led115 = 0;
 
 bit clock200mhz;
 
@@ -175,51 +177,15 @@ logic_analyzer_controller_quadspi logic_analyzer_controller0(
 		.data_count(data4_count)
 		);
 
-bit[37:0] sd_read_data;
-bit sd_read_data_strobe;
-bit sd_read_error;
-bit[37:0] sd_write_data;
-bit sd_write_data_strobe;
-bit read_disabled;
-bit read_disabled4;
-		
-		
 sdio_slave sdio_slave0(
 	.clock(clock200mhz),
 	.sd_clock(sd_clock),
 	.sd_serial(sd_cmd),
 	.sd_data(sd_data),
 	
-	.read_data(sd_read_data),
-	.read_data_strobe(sd_read_data_strobe),
-	.read_error(sd_read_error),
-	
-	.write_data(sd_write_data),
-	.write_data_strobe(sd_write_data_strobe),
-
-	.write_data4_strobe(write_data4_strobe),
-	.write_data4_count(data4_count),
-	
-	.read_disabled(read_disabled),
-	.read_disabled4(read_disabled4)
-);
-
-sdio_commands_processor sdio_commands(
-	.clock(clock200mhz),
-	
-	.read_data(sd_read_data),
-	.read_data_strobe(sd_read_data_strobe),
-	.read_error(sd_read_error),
-	
-	.write_data(sd_write_data),
-	.write_data_strobe(sd_write_data_strobe),
-	
-	.write_data4_strobe(write_data4_strobe),
-	.read_data4_strobe(read_data4_strobe),
 	.data4_count(data4_count),
-	
-	.send_command_in_progress(read_disabled),
-	.send_data_in_progress(read_disabled4)
+	.write_data4_strobe(write_data4_strobe),
+	.read_data4_strobe(read_data4_strobe)
 );
 
 bit[2:0] dev_command_top;

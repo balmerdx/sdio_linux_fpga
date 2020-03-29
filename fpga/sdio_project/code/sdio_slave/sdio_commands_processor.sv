@@ -81,7 +81,7 @@ assign cmd52_response_flags_bit[2] = 0;
 assign cmd52_response_flags_bit[1] = INVALID_FUNCTION_NUMBER;
 assign cmd52_response_flags_bit[0] = OUT_OF_RANGE;
 
-bit[7:0] cmd52_response_reg_data = 0;
+byte cmd52_response_reg_data = 0;
 
 bit send_cmd52 = 0;
 bit send_cmd53 = 0;
@@ -109,29 +109,7 @@ bit card_selected = 0;
 bit [15:0] block_size = 0;
 
 byte cis_array[0:63];
-initial begin
-	$readmemh("cis.mem", cis_array, 0);
-/*	
-	//CISTPL_MANFID
-	cis_array[0] = 8'h20;
-	cis_array[1] = 8'h04;
-	//Пробуем SDIO_ANY_ID
-	
-	cis_array[2] = 8'hc2;
-	cis_array[3] = 8'h12;
-	cis_array[4] = 8'h4e;
-	cis_array[5] = 8'h47;
-	
-	//CISTPL_FUNCID
-	cis_array[2] = 8'h21;
-	cis_array[3] = 8'h02;
-	cis_array[4] = 8'h0c;
-	cis_array[5] = 8'h00;
-	
-	//CISTPL_END
-	cis_array[6] = 8'hFF;
-*/	
-end
+initial $readmemh("cis.mem", cis_array, 0);
 
 bit[7:0] read_counter = 32;
 bit read_empty = 0;
@@ -144,12 +122,12 @@ begin
 	read_data4_strobe <= 0;
 	
 	if(send_data_in_progress)
-		IO_CURRENT_STATE <= 3'd2;
+		IO_CURRENT_STATE <= 2'd2;
 	else
 	if(card_selected)
-		IO_CURRENT_STATE <= 3'd1;
+		IO_CURRENT_STATE <= 2'd1;
 	else
-		IO_CURRENT_STATE <= 3'd0;
+		IO_CURRENT_STATE <= 2'd0;
 		
 	if(wait_after_cmd > 0)
 		wait_after_cmd <= wait_after_cmd-1'd1;

@@ -81,9 +81,9 @@ logic_alanyser_fifo8_async logic_analyzer_fifo0(
 	
 bit start_word_capture = 0;
 
-bit is_falling_clock;
+//bit is_falling_clock;
 bit is_rising_clock;
-assign is_falling_clock = logic_clock3==1'b1 && logic_clock2==1'b0;
+//assign is_falling_clock = logic_clock3==1'b1 && logic_clock2==1'b0;
 assign is_rising_clock = logic_clock3==1'b0 && logic_clock2==1'b1;
 
 bit start_flag;
