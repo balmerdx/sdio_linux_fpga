@@ -14,9 +14,8 @@
 py_code/vcd
 py_code/sample
 
-verilator_tests/*/obj_dir
-verilator_tests/*/logs
-verilator_tests/build-FT4222_send
+fpga/verilator_tests/*/obj_dir
+fpga/verilator_tests/*/logs
 
 fpga/sdio_project/db/
 fpga/sdio_project/incremental_db/

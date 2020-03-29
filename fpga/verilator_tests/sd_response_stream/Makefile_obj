@@ -1,0 +1,2 @@
+CPPFLAGS += -MMD -MP
+CPPFLAGS += -g # defug info
