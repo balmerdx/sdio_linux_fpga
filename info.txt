@@ -1,0 +1,26 @@
+Всякие мелочи, которые я пишу по мере продвижения проекта.
+
+В папке /home/balmer/radio/pi/buildroot/buildroot-licheepi-zero-licheepi-zero
+Пишем образ на SD карту
+sudo dd if=output/images/sdcard.img of=/dev/sdb bs=4M oflag=dsync
+sync
+
+
+Терминал Linux через UART
+cu -l /dev/ttyUSB0 -s 115200
+
+Компиляция Linux полная
+make BR2_EXTERNAL=/home/balmer/radio/pi/buildroot/my_buildroot BR2_TARGET_UBOOT_BOARD_DEFCONFIG=LicheePi_Zero_800x480LCD
+BR2_TARGET_UBOOT_BOARD_DEFCONFIG = /home/balmer/radio/pi/buildroot/my_buildroot/boot/configs/LicheePi_Zero_800x480LCD_defconfig
+
+Перекомпиляция нашего драйвера
+make balmer_sdio_uart-rebuild BR2_EXTERNAL=/home/balmer/radio/pi/buildroot/my_buildroot BR2_TARGET_UBOOT_BOARD_DEFCONFIG=LicheePi_Zero_800x480LCD
+
+Местоположение драйвера на SD карте
+/lib/modules/4.14.14-licheepi-zero/extra/balmer_sdio_uart.ko
+чтобы загрузить - надо перейти в эту директорию и написать 
+wget http://192.168.1.38:8000/balmer_sdio_uart.ko
+modprobe balmer_sdio_uart.ko
+
+Либо (из любой директории)
+insmod /lib/modules/4.14.14-licheepi-zero/extra/balmer_sdio_uart.ko

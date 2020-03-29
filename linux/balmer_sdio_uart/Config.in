@@ -1,0 +1,5 @@
+config BR2_PACKAGE_BALMER_SDIO_UART
+	bool "balmer_sdio_uart"
+	depends on BR2_LINUX_KERNEL
+	help
+		See README.adoc
