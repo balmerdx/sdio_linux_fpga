@@ -22,4 +22,6 @@ fpga/sdio_project/incremental_db/
 fpga/sdio_project/output_files/
 fpga/sdio_project/simulation/
 
+linux/sdio_test/read
+linux/sdio_test/write
 
