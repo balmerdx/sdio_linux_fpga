@@ -1,0 +1,125 @@
+# -------------------------------------------------------------------------- #
+#
+# Copyright (C) 2017  Intel Corporation. All rights reserved.
+# Your use of Intel Corporation's design tools, logic functions 
+# and other software and tools, and its AMPP partner logic 
+# functions, and any output files from any of the foregoing 
+# (including device programming or simulation files), and any 
+# associated documentation or information are expressly subject 
+# to the terms and conditions of the Intel Program License 
+# Subscription Agreement, the Intel Quartus Prime License Agreement,
+# the Intel FPGA IP License Agreement, or other applicable license
+# agreement, including, without limitation, that your use is for
+# the sole purpose of programming logic devices manufactured by
+# Intel and sold by Intel or its authorized distributors.  Please
+# refer to the applicable agreement for further details.
+#
+# -------------------------------------------------------------------------- #
+#
+# Quartus Prime
+# Version 17.1.1 Internal Build 593 12/11/2017 SJ Lite Edition
+# Date created = 22:46:45  October 24, 2018
+#
+# -------------------------------------------------------------------------- #
+#
+# Notes:
+#
+# 1) The default values for assignments are stored in the file:
+#		test_my_board_assignment_defaults.qdf
+#    If this file doesn't exist, see file:
+#		assignment_defaults.qdf
+#
+# 2) Altera recommends that you do not modify this file. This
+#    file is updated automatically by the Quartus Prime software
+#    and any changes you make may be lost or overwritten.
+#
+# -------------------------------------------------------------------------- #
+
+
+set_global_assignment -name FAMILY "Cyclone IV E"
+set_global_assignment -name DEVICE EP4CE10E22C6
+set_global_assignment -name TOP_LEVEL_ENTITY root_logic_analyzer
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION 17.1.1
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "22:46:45  OCTOBER 24, 2018"
+set_global_assignment -name LAST_QUARTUS_VERSION "18.1.0 Lite Edition"
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
+set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
+set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
+set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 6
+set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 1
+set_global_assignment -name NOMINAL_CORE_SUPPLY_VOLTAGE 1.2V
+set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (SystemVerilog)"
+set_global_assignment -name EDA_TIME_SCALE "1 ps" -section_id eda_simulation
+set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "SYSTEMVERILOG HDL" -section_id eda_simulation
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
+set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+set_location_assignment PIN_23 -to clk_50M
+set_location_assignment PIN_110 -to led110
+set_location_assignment PIN_111 -to led111
+set_location_assignment PIN_114 -to led114
+set_location_assignment PIN_115 -to led115
+set_global_assignment -name VERILOG_INPUT_VERSION SYSTEMVERILOG_2005
+set_global_assignment -name VERILOG_SHOW_LMF_MAPPING_MESSAGES OFF
+set_location_assignment PIN_38 -to uart_rx_pin
+set_location_assignment PIN_39 -to uart_tx_pin
+
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 2
+
+set_location_assignment PIN_66 -to sd_clock
+set_location_assignment PIN_67 -to sd_cmd
+set_location_assignment PIN_68 -to sd_data[0]
+set_location_assignment PIN_69 -to sd_data[1]
+set_location_assignment PIN_70 -to sd_data[2]
+set_location_assignment PIN_71 -to sd_data[3]
+set_global_assignment -name VERILOG_MACRO "HARDWARE_DEVICE=<None>"
+set_global_assignment -name VERILOG_MACRO "USE_LOGIC_ANALYZER=1"
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to clk_50M
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to led110
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to led111
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to led114
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to led115
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to uart_rx_pin
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to uart_tx_pin
+set_instance_assignment -name IO_STANDARD "3.0-V LVTTL" -to sd_clock
+set_instance_assignment -name IO_STANDARD "3.0-V LVTTL" -to sd_cmd
+set_instance_assignment -name IO_STANDARD "3.0-V LVTTL" -to sd_data[0]
+set_instance_assignment -name IO_STANDARD "3.0-V LVTTL" -to sd_data[1]
+set_instance_assignment -name IO_STANDARD "3.0-V LVTTL" -to sd_data[2]
+set_instance_assignment -name IO_STANDARD "3.0-V LVTTL" -to sd_data[3]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sd_data[3]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sd_data[2]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sd_data[1]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sd_data[0]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sd_cmd
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR OFF -to sd_clock
+set_global_assignment -name SDC_FILE sdio_project.sdc
+set_global_assignment -name CDF_FILE output_files/test_my_board_jic.cdf
+set_global_assignment -name QIP_FILE code/uart/uart_rx_fifo.qip
+set_global_assignment -name QIP_FILE code/pll/pll200mhz.qip
+set_global_assignment -name QIP_FILE code/logic_analyzer/logic_analyzer_fifo_async.qip
+set_global_assignment -name QIP_FILE code/logic_analyzer/logic_alanyser_fifo8_async.qip
+set_global_assignment -name CDF_FILE output_files/write_to_flash.cdf
+set_global_assignment -name SYSTEMVERILOG_FILE code/root_logic_analyzer.sv
+set_global_assignment -name SYSTEMVERILOG_FILE code/logic_analyzer/logic_analyzer_controller_200mhz_serial48.sv
+set_global_assignment -name SYSTEMVERILOG_FILE code/logic_analyzer/logic_analyzer_controller_quadspi.sv
+set_global_assignment -name SYSTEMVERILOG_FILE code/uart/uart_tx.sv
+set_global_assignment -name SYSTEMVERILOG_FILE code/uart/uart_rx.sv
+set_global_assignment -name SYSTEMVERILOG_FILE code/uart/uart_rx_controller.sv
+set_global_assignment -name SYSTEMVERILOG_FILE code/signal_timer.sv
+set_global_assignment -name SYSTEMVERILOG_FILE code/sdio_slave/sd_response_stream.sv
+set_global_assignment -name SYSTEMVERILOG_FILE code/sdio_slave/sd_crc7.sv
+set_global_assignment -name SYSTEMVERILOG_FILE code/sdio_slave/sd_read_stream.sv
+set_global_assignment -name SYSTEMVERILOG_FILE code/sdio_slave/sdio_slave.sv
+set_global_assignment -name SYSTEMVERILOG_FILE code/sdio_slave/sdio_commands_processor.sv
+set_global_assignment -name SYSTEMVERILOG_FILE code/sdio_slave/sd_crc16.sv
+set_global_assignment -name SYSTEMVERILOG_FILE code/sdio_slave/sd_response_stream_dat.sv
+
+set_instance_assignment -name IO_STANDARD "3.0-V LVTTL" -to sd_data
+
+
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
