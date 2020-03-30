@@ -21,6 +21,12 @@ module sd_response_stream_dat(
 	input bit data_strobe, //На 1 такт включается, когда в data корректные данные. Они должны быть корректны до окончания  передачи.
 	input byte data,//Данные которые мы посылаем, должны быть валидны когда data_strobe==1
 	
+	//Начать отсылку CRC status (он после приёма данных по 4-м линиям должен отослаться)
+	input bit start_send_crc_status,
+	//crc_status==1 - positive
+	//crc_status==1 - negative
+	input bit crc_status,
+	
 	input bit sd_clock, //Передаем бит, когда clock falling
 	output bit[3:0] sd_data, //Пин, через который передаются данные
 	output bit write_enabled, //Пока передаются данные write_enabled==1 (переключение inout получается уровнем выше)
@@ -74,22 +80,27 @@ sd_crc16 crc16_3(
 bit[2:0] wait_before_write = 0;
 bit[1:0] wait_after_write = 0;
 
-typedef enum bit [3:0] {
+typedef enum bit [2:0] {
 	//В текущий момент передачи нет.
-	SD_STOP = 4'h0,
+	SD_STOP = 3'h0,
 
 	//Пишем в sd_data нули
-	SD_START_ZERO = 4'h1,
+	SD_START_ZERO = 3'h1,
 	
 	//Пишем старшую часть битов в байте.
-	SD_WRITE_7_4_BITS = 4'h2,
+	SD_WRITE_7_4_BITS = 3'h2,
 	//Пишем младшую часть битов в байте.
-	SD_WRITE_3_0_BITS = 4'h3,
+	SD_WRITE_3_0_BITS = 3'h3,
 	
-	SD_WRITE_CRC = 4'h4,
+	SD_WRITE_CRC = 3'h4,
 	
 	//Пишем в sd_data единицы и заканчиваем передачу.
-	SD_END_ONE = 4'h5
+	SD_END_ONE = 3'h5,
+	
+	//Посылаем 5 бит по всем линиям одинаковые
+	//01011 - negative
+	//00101 - positive
+	SD_SEND_CRC_STATUS = 3'h6
 	
 } SD_COMMANDS;
 
@@ -97,8 +108,10 @@ SD_COMMANDS command = SD_STOP;
 
 byte data_stored;
 bit[3:0] data_prev_stored;
-
 bit[3:0] crc_bit;
+
+bit[3:0] crc_status_bits;
+bit[1:0] crc_status_bits_index;
 
 always @(posedge clock)
 begin
@@ -110,7 +123,18 @@ begin
 		
 	if(data_strobe)
 		data_stored <= data;
-	
+		
+	if(start_send_crc_status)
+	begin
+		read_disabled <= 1'd1;
+		command <= SD_SEND_CRC_STATUS;
+		wait_before_write <= 3'd7;
+		wait_after_write <= 0;
+		
+		crc_status_bits <= crc_status?4'b0010:4'b0101;
+		crc_status_bits_index <= 2'd3;
+	end
+	else
 	if(start_write)
 	begin
 		data_req <= 1'd1;
@@ -174,8 +198,20 @@ begin
 		SD_END_ONE: begin
 			sd_data <= 4'b1111;
 			command <= SD_STOP;
-			
 			wait_after_write <= 2'd3;
+		end
+		
+		SD_SEND_CRC_STATUS : begin
+			sd_data <= {4{crc_status_bits[crc_status_bits_index]}};
+			
+			if(crc_status_bits_index>0)
+			begin
+				crc_status_bits_index <= crc_status_bits_index-1'd1;
+			end
+			else
+			begin
+				command <= SD_END_ONE;
+			end
 		end
 	
 		endcase

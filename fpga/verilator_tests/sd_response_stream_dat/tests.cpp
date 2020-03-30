@@ -222,3 +222,99 @@ bool TestWrite::afterEval()
 
     return true;
 }
+
+////////////////////////////TestCrcStatus////////////////////////////
+
+TestCrcStatus::TestCrcStatus(bool positive)
+    : positive(positive)
+{
+    data = positive ? 0b00101 : 0b01011;
+    dataReceived = 0;
+}
+
+void TestCrcStatus::start()
+{
+    printf("TestCrcStatus started ");
+    top->start_send_crc_status = 1;
+    top->crc_status = positive?1:0;
+    prev_sd_clock = top->sd_clock;
+}
+
+void TestCrcStatus::beforeEval()
+{
+    if(clockFalling())
+        return;
+}
+
+bool TestCrcStatus::afterEval()
+{
+    if(_fail)
+        return false;
+
+    if(!clockRising())
+        return true;
+
+    top->start_send_crc_status = 0;
+
+    if(prev_sd_clock==1 && top->sd_clock==0)
+    {
+        if(top->write_enabled)
+        {
+            writeEnabledFound = true;
+            bool is_pre_bit = dataReceivedIdx==0 && top->sd_data==0xF;
+            if(!is_pre_bit)
+            {
+                if(dataReceivedIdx==0 && (top->sd_data&1)!=0)
+                {
+                    printf("Error: start top->sd_data!=0\n");
+                    _fail = true;
+                    return false;
+                }
+
+                if(dataReceivedIdx < bitsCount)
+                {
+                    dataReceived = (dataReceived<<1) | (top->sd_data&1);
+                    dataReceivedIdx++;
+                } else
+                {
+                    if(top->sd_data!=0xF)
+                    {
+                        printf("Error: start top->sd_data!=0xF\n");
+                        _fail = true;
+                        return false;
+                    }
+                }
+            }
+        } else
+        {
+            if(writeEnabledFound)
+            {
+                if(waitAterWrite==0)
+                {
+                    if(dataReceivedIdx!=bitsCount)
+                    {
+                        printf("Error: bits received %i\n", dataReceivedIdx);
+                        _fail = true;
+                        return false;
+                    }
+
+                    if(data!=dataReceived)
+                    {
+                        printf("Error: received=%x calculated=%x\n", (uint32_t)dataReceived, (uint32_t)data);
+                        _fail = true;
+                        return false;
+                    }
+                }
+
+                waitAterWrite++;
+
+                if(waitAterWrite>16)
+                    return false;
+            }
+        }
+    }
+
+    prev_sd_clock = top->sd_clock;
+
+    return true;
+}

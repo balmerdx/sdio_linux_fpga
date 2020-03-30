@@ -64,3 +64,28 @@ protected:
 
     int waitAterWrite = 0;
 };
+
+
+class TestCrcStatus : public VerilogTest
+{
+public:
+    TestCrcStatus(bool positive);
+
+    void start() override;
+    void beforeEval() override;
+    bool afterEval() override;
+
+protected:
+    const int bitsCount = 5;
+    bool positive;
+    uint8_t data;
+    uint8_t dataReceived;
+    size_t currentIndex = 0;
+
+    int dataReceivedIdx = 0;
+
+    uint8_t prev_sd_clock;
+    bool writeEnabledFound = false;
+
+    int waitAterWrite = 0;
+};

@@ -36,7 +36,11 @@ int main(int argc, char** argv, char** env)
     std::vector<std::shared_ptr<VerilogTest>> test;
     test.push_back(std::make_shared<TestSilence>(20));
 
+    test.push_back(std::make_shared<TestCrcStatus>(true));
+    test.push_back(std::make_shared<TestCrcStatus>(false));
+
     std::vector<uint8_t> data;
+
 
     data.push_back(0xFE);
     test.push_back(std::make_shared<TestWrite>(data));
@@ -55,6 +59,10 @@ int main(int argc, char** argv, char** env)
 
     data = std::vector<uint8_t> {0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1 };
     test.push_back(std::make_shared<TestWrite>(data));
+
+    test.push_back(std::make_shared<TestCrcStatus>(true));
+    test.push_back(std::make_shared<TestCrcStatus>(false));
+
 
     int current_test = -1;
     bool next_test = true;
