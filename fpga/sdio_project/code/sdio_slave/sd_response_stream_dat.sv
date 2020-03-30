@@ -80,7 +80,6 @@ typedef enum bit [3:0] {
 
 	//Пишем в sd_data нули
 	SD_START_ZERO = 4'h1,
-	SD_START_ZERO2 = 4'h6,
 	
 	//Пишем старшую часть битов в байте.
 	SD_WRITE_7_4_BITS = 4'h2,
@@ -135,12 +134,6 @@ begin
 		SD_STOP: begin
 		end
 		SD_START_ZERO : begin
-			sd_data <= 4'd0;
-			command <= SD_WRITE_7_4_BITS;
-			//command <= SD_START_ZERO2;
-		end
-		
-		SD_START_ZERO2 : begin
 			sd_data <= 4'd0;
 			command <= SD_WRITE_7_4_BITS;
 		end

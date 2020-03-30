@@ -5,7 +5,7 @@
 //CISTPL_FUNCE Tuple for Function 0 (6 bytes)
 22 04 00 
 00 01 //TPLFE_FN0_BLK_SIZE
-32    //TPLFE_MAX_TRAN_SPEED 32-25 MHz
+32    //TPLFE_MAX_TRAN_SPEED 0x32->25 MHz , 0x5A -> 50 MHz?
 
 //CISTPL_END (1 byte)
 FF
