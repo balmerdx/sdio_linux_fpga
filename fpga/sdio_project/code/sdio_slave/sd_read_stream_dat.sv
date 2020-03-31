@@ -18,7 +18,7 @@ module sd_read_stream_dat(
 	output bit crc_ok //Читать в тот момент, когда write_all_strobe==1
 );
 
-bit[10:0] data_count_buf; //Количество байт, которые надо прочитать
+bit[8:0] data_count_buf; //Количество байт, которые надо прочитать
 bit[3:0] crc_read_idx; //После того, как прочитали данные - читаем 16 бит CRC и сравниваем с посчитанным
 bit full_byte; //Устанавливается, если прочитан полный байт
 
@@ -36,8 +36,6 @@ bit start_flag;
 assign start_flag = data_count_buf>0 && sd_data_prev==4'b1111 && sd_data2==0 && start_word_capture==0;
 
 bit read_data_complete;
-assign read_data_complete=(data_count_buf==0);
-
 
 bit crc16_clear = 1;
 assign crc16_clear = read_strobe;
@@ -90,6 +88,8 @@ begin
 		full_byte <= 0;
 		start_word_capture <= 0;
 		crc_ok <= 1'd1;
+		
+		read_data_complete <= 0;
 	end
 	
 	if(is_rising_clock)
@@ -105,11 +105,15 @@ begin
 			crc16_in <= sd_data2;
 			crc16_enable <= !read_data_complete;
 		
-			if(full_byte)
+			if(full_byte && !read_data_complete)
 			begin
 				byte_out[7:4] <= crc16_in;
 				byte_out[3:0] <= sd_data2;
 				write_byte_strobe <= 1'd1;
+				data_count_buf <= data_count_buf-1'd1;
+				
+				if(data_count_buf==9'd1)
+					read_data_complete <= 1'd1;
 			end
 			
 			if(read_data_complete)
@@ -127,10 +131,6 @@ begin
 					write_all_strobe <= 1'd1;
 					start_word_capture<=0;
 				end
-			end
-			else
-			begin
-				data_count_buf <= data_count_buf-1'd1;
 			end
 		end
 	end

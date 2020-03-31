@@ -8,8 +8,6 @@
 extern vluint64_t main_time;
 bool clockRising() { return (main_time&1)==1; }
 bool clockFalling() { return (main_time&1)==0; }
-//bool clockSck() { return (main_time/2)%32==1; }
-//bool clockSck() { return (main_time/2)%4==1; }
 bool clockSck() { return (main_time/2)%2==1; }
 
 VerilogTest::VerilogTest()
