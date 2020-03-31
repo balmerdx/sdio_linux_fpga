@@ -24,7 +24,7 @@ module sd_response_stream_dat(
 	//Начать отсылку CRC status (он после приёма данных по 4-м линиям должен отослаться)
 	input bit start_send_crc_status,
 	//crc_status==1 - positive
-	//crc_status==1 - negative
+	//crc_status==0 - negative
 	input bit crc_status,
 	
 	input bit sd_clock, //Передаем бит, когда clock falling

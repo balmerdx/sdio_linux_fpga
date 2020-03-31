@@ -36,6 +36,11 @@ bit write_data_strobe;
 bit read_disabled; //Пока 1 - нельзя передавать команды
 bit read_disabled4; //Пока 1 - нельзя передавать данные
 
+bit write_all_strobe4;
+bit crc_ok4;
+bit start_send_crc_status = 0;
+bit crc_status;
+
 
 sd_response_stream response(
 	.clock(clock),
@@ -74,11 +79,29 @@ sd_response_stream_dat response_dat(
 	.data_strobe(data_strobe),
 	.data(data),
 	
+	.start_send_crc_status(start_send_crc_status),
+	.crc_status(crc_status),
+	
 	.sd_clock(sd_clock), //Передаем бит, когда clock falling
 	.sd_data(sd_data_out), //Пин, через который передаются данные
 	.write_enabled(write_enabled4), //Пока передаются данные write_enabled==1 (переключение inout получается уровнем выше)
 	.read_disabled(read_disabled4)
 );
+
+sd_read_stream_dat read_dat(
+	.clock(clock),
+	.sd_clock(sd_clock),
+	.sd_data(sd_data),
+	
+	.read_strobe(read_data4_strobe),
+	.data_count(data4_count),
+	
+	.write_byte_strobe(),
+	.byte_out(),
+	.write_all_strobe(write_all_strobe4),
+	.crc_ok(crc_ok4)
+);
+
 
 sdio_commands_processor sdio_commands(
 	.clock(clock),
@@ -102,6 +125,8 @@ sdio_commands_processor sdio_commands(
 //Временный код, чтобы передать данные.
 always @(posedge clock)
 begin
+	start_send_crc_status <= 0;
+
 	start_write <= 0;
 	data_strobe <= 0;
 	if(write_data4_strobe)
@@ -124,7 +149,13 @@ begin
 			data_empty <= 1'd1;
 		end
 	end
-	
+
+	//Передаём ответ, что мы приняли данные
+	if(write_all_strobe4)
+	begin
+		start_send_crc_status <= 1'd1;
+		crc_status <= crc_ok4;
+	end
 end
 
 endmodule

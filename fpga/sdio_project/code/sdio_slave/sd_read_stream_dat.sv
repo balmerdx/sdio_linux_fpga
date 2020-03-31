@@ -3,7 +3,9 @@
  * Created:	2020
  * License: MIT License
 */
-
+/*
+	Прочитать поток данных из SD интерфейса и передать их на FIFO для дальнейшей обработки
+*/
 module sd_read_stream_dat(
 	input bit clock,
 	input bit sd_clock,

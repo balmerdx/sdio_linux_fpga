@@ -126,7 +126,7 @@ bit[8:0] data4_count;
 //5 69 - D1
 //6 70 - D2
 //7 71 - D3
-/*
+
 logic_analyzer_controller_200mhz_serial48 logic_analyzer_controller0(
 		.clock(clock50mhz),
 		.clock200mhz(clock200mhz),
@@ -149,7 +149,7 @@ logic_analyzer_controller_200mhz_serial48 logic_analyzer_controller0(
 		.logic_clock(sd_clock),
 		.logic_serial(sd_cmd)
 		);
-*/		
+/*		
 logic_analyzer_controller_quadspi logic_analyzer_controller0(
 		.clock(clock50mhz),
 		.clock200mhz(clock200mhz),
@@ -176,7 +176,7 @@ logic_analyzer_controller_quadspi logic_analyzer_controller0(
 		.read_strobe(read_data4_strobe),
 		.data_count(data4_count)
 		);
-
+*/
 sdio_slave sdio_slave0(
 	.clock(clock200mhz),
 	.sd_clock(sd_clock),
