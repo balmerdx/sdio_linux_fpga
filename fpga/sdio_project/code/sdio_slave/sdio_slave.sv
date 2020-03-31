@@ -11,9 +11,32 @@ module sdio_slave(
 	inout wire[3:0] sd_data,
 	
 	//Количество данных, которые требуется передать или принять
-	output bit[8:0] data4_count,
+	output type_data4_count data4_count,
 	output bit write_data4_strobe,
-	output bit read_data4_strobe
+	output bit read_data4_strobe,
+
+	//Интерфейс для отсылки данных по dat 4 линиям
+	//После того, как пришел write_data4_strobe надо на 1 такт поднять response_start_write
+	//и тем начать передачу
+	// response_data_req - Поднимается на 1 такт, когда требуюется следующий байт response_data.
+	// так как он требуется через достаточно продолжительное время, то задержка в 2 такта допустима
+	// response_data_strobe выставляется на 1 такт, чтобы указать, что данные готовы (в ответ на response_data_req)
+	// response_data_empty выставляется, если данных больше нет (в ответ на response_data_req)
+	input bit response_start_write, 
+	input bit response_data_empty,
+	input bit response_data_strobe,
+	output bit response_data_req, 
+	input byte response_data,
+	
+	//Интерфейс для приёма данных по dat 4 линиям
+	//read_byte_strobe прочитался байт
+	//read_all_strobe - прочитались все data4_count байт
+	//read_byte - байт который прочитался
+	//read_crc_ok4 - проверка CRC подтвердила, что байты прочитались корректно (сморреть когда read_all_strobe==1)
+	output bit read_byte_strobe,
+	output bit read_all_strobe,
+	output byte read_byte,
+	output bit read_crc_ok4
 );
 
 bit write_enabled;
@@ -36,8 +59,6 @@ bit write_data_strobe;
 bit read_disabled; //Пока 1 - нельзя передавать команды
 bit read_disabled4; //Пока 1 - нельзя передавать данные
 
-bit write_all_strobe4;
-bit crc_ok4;
 bit start_send_crc_status = 0;
 bit crc_status;
 
@@ -62,22 +83,15 @@ sd_read_stream read(
 	.read_error(read_error)
 );
 
-bit[8:0] write_count = 0;
-bit start_write = 0;
-bit data_empty;
-bit data_strobe;
-bit data_req;
-byte data;
-
 sd_response_stream_dat response_dat(
 	.clock(clock),
 	
-	.start_write(start_write),
+	.start_write(response_start_write),
 	
-	.data_req(data_req),
-	.data_empty(data_empty),
-	.data_strobe(data_strobe),
-	.data(data),
+	.data_req(response_data_req),
+	.data_empty(response_data_empty),
+	.data_strobe(response_data_strobe),
+	.data(response_data),
 	
 	.start_send_crc_status(start_send_crc_status),
 	.crc_status(crc_status),
@@ -96,10 +110,10 @@ sd_read_stream_dat read_dat(
 	.read_strobe(read_data4_strobe),
 	.data_count(data4_count),
 	
-	.write_byte_strobe(),
-	.byte_out(),
-	.write_all_strobe(write_all_strobe4),
-	.crc_ok(crc_ok4)
+	.write_byte_strobe(read_byte_strobe),
+	.byte_out(read_byte),
+	.write_all_strobe(read_all_strobe),
+	.crc_ok(read_crc_ok4)
 );
 
 
@@ -127,34 +141,11 @@ always @(posedge clock)
 begin
 	start_send_crc_status <= 0;
 
-	start_write <= 0;
-	data_strobe <= 0;
-	if(write_data4_strobe)
-	begin
-		write_count <= data4_count;
-		start_write <= 1'd1;
-		data_empty <= 0;
-	end
-	
-	if(data_req)
-	begin
-		if(write_count>0)
-		begin
-			data <= write_count[7:0]+8'h35;
-			data_strobe <= 1'd1;
-			write_count <= write_count-1'd1;
-		end
-		else
-		begin
-			data_empty <= 1'd1;
-		end
-	end
-
 	//Передаём ответ, что мы приняли данные
-	if(write_all_strobe4)
+	if(read_all_strobe)
 	begin
 		start_send_crc_status <= 1'd1;
-		crc_status <= crc_ok4;
+		crc_status <= read_crc_ok4;
 	end
 end
 

@@ -18,10 +18,11 @@ VERILATOR_FLAGS += --coverage
 # Add this trace to get a backtrace in gdb
 VERILATOR_FLAGS += --gdbbt
 
+SV_DIR = ../../sdio_project/code/sdio_slave
 
 build:
 	@mkdir -p logs
-	verilator $(VERILATOR_FLAGS) --top-module sd_read_stream_dat ../../sdio_project/code/sdio_slave/sd_read_stream_dat.sv ../../sdio_project/code/sdio_slave/sd_crc16.sv sim_main.cpp tests.cpp
+	verilator $(VERILATOR_FLAGS) --top-module sd_read_stream_dat $(SV_DIR)/sd_typedef.sv $(SV_DIR)/sd_read_stream_dat.sv $(SV_DIR)/sd_crc16.sv  sim_main.cpp tests.cpp 
 	$(MAKE) -j -C obj_dir -f Vsd_read_stream_dat.mk Vsd_read_stream_dat -f ../Makefile_obj
 
 run:

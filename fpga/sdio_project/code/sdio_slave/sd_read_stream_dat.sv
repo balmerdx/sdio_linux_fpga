@@ -6,13 +6,14 @@
 /*
 	Прочитать поток данных из SD интерфейса и передать их на FIFO для дальнейшей обработки
 */
+
 module sd_read_stream_dat(
 	input bit clock,
 	input bit sd_clock,
 	input bit[3:0] sd_data,
 	
 	input bit read_strobe, //Когда начинать сэмплирование (устанавливается на 1 такт)
-	input bit[8:0] data_count, //Количество байт, которые надо прочитать
+	input type_data4_count data_count, //Количество байт, которые надо прочитать
 	
 	output bit write_byte_strobe, //Получили байт по SD протоколу
 	output byte byte_out, //Полученный байт
@@ -20,7 +21,7 @@ module sd_read_stream_dat(
 	output bit crc_ok //Читать в тот момент, когда write_all_strobe==1
 );
 
-bit[8:0] data_count_buf; //Количество байт, которые надо прочитать
+type_data4_count data_count_buf; //Количество байт, которые надо прочитать
 bit[3:0] crc_read_idx; //После того, как прочитали данные - читаем 16 бит CRC и сравниваем с посчитанным
 bit full_byte; //Устанавливается, если прочитан полный байт
 

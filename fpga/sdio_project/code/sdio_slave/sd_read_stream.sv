@@ -11,6 +11,7 @@
 	Первый бит всегда 0.
 	Второй бит всегда 1. Если второй бит 0, то игнорируем последующие 48 байт.
 */
+
 module sd_read_stream(
 	input bit clock,
 	input bit sd_clock,

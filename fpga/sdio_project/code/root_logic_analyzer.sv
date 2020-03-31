@@ -119,6 +119,12 @@ uart_rx_controller #(.TIMEOUT_MS(500))
 bit write_data4_strobe;
 bit read_data4_strobe;
 bit[8:0] data4_count;
+
+bit response_start_write = 0;
+bit response_data_empty = 0;
+bit response_data_strobe = 0;
+bit response_data_req;
+byte response_data;
 	
 //2 66 - clk
 //3 67 - cmd
@@ -185,7 +191,14 @@ sdio_slave sdio_slave0(
 	
 	.data4_count(data4_count),
 	.write_data4_strobe(write_data4_strobe),
-	.read_data4_strobe(read_data4_strobe)
+	.read_data4_strobe(read_data4_strobe),
+	
+	.response_start_write(response_start_write),
+	.response_data_empty(response_data_empty),
+	.response_data_strobe(response_data_strobe),
+	.response_data_req(response_data_req),
+	.response_data(response_data)
+	
 );
 
 bit[2:0] dev_command_top;
@@ -214,6 +227,37 @@ always_ff @(posedge clock200mhz)
 begin
 	if(write_data4_strobe)
 		led110 <= 1'd1;
+end
+
+
+//Временный код, чтобы передать данные.
+type_data4_count write_count = 0;
+always @(posedge clock200mhz)
+begin
+
+	response_start_write <= 0;
+	response_data_strobe <= 0;
+	if(write_data4_strobe)
+	begin
+		write_count <= data4_count;
+		response_start_write <= 1'd1;
+		response_data_empty <= 0;
+	end
+	
+	if(response_data_req)
+	begin
+		if(write_count>0)
+		begin
+			response_data <= write_count[7:0]+8'h35;
+			response_data_strobe <= 1'd1;
+			write_count <= write_count-1'd1;
+		end
+		else
+		begin
+			response_data_empty <= 1'd1;
+		end
+	end
+
 end
 
 endmodule

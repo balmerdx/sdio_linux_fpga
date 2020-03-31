@@ -3,7 +3,6 @@
  * Created:	2020
  * License: MIT License
 */
-
 module sdio_commands_processor(
 	input bit clock,
 	//Данные прочитанные из sdio command line
@@ -18,7 +17,7 @@ module sdio_commands_processor(
 	//Передача/прием данных по dat0-dat3
 	output bit write_data4_strobe, //Данные надо отсылать на хост
 	output bit read_data4_strobe,  //Данные надо принимать
-	output bit[8:0] data4_count, //Количество данных, которые следует отослать или принять по dat0-dat3
+	output type_data4_count data4_count, //Количество данных, которые следует отослать или принять по dat0-dat3
 	
 	input bit send_command_in_progress, //В текущий момент передаётся команда
 	input bit send_data_in_progress //В текущий момент данные отсылаются
