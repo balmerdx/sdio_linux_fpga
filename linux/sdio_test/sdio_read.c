@@ -33,8 +33,8 @@ int main(void)
 	printf("  Delta tume %i usec\n", (int)(end_usec-start_usec));
 	printf("  Bytes received %d\n", bytes_read);
 
-	for(i=0;i<bytes_read;i++)
-	    printf("%x,", (int)read_buffer[i]);
+	//for(i=0;i<bytes_read;i++)
+	//    printf("%x,", (int)read_buffer[i]);
 
 	printf("\n");
 	close(fd);

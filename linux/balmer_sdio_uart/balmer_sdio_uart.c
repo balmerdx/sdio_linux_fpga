@@ -183,7 +183,7 @@ static void sdio_uart_receive_chars(struct sdio_uart_port *port,
     ret = kfifo_in_locked(&port->read_fifo, data, count, &port->write_lock);
 #undef RECEIVE_BUFFER_SIZE
 }
-*/
+
 static void sdio_uart_transmit_chars(struct sdio_uart_port *port)
 {
 	struct kfifo *xmit = &port->xmit_fifo;
@@ -219,7 +219,7 @@ static void sdio_uart_transmit_chars(struct sdio_uart_port *port)
 
     //len = kfifo_len(xmit); //test code
 }
-
+*/
 /*
  * This handles the interrupt from one port.
  */
@@ -246,12 +246,12 @@ static void sdio_uart_irq(struct sdio_func *func)
     {
         sdio_uart_receive_chars(port, &status);
     }
-    */
 
     if (status & BIT_STATUS_THRE)
     {
         sdio_uart_transmit_chars(port);
     }
+    */
 
 	port->in_sdio_uart_irq = NULL;
 }
@@ -270,6 +270,26 @@ static int sdio_receive_inline(struct sdio_func *func, char* buf, int size)
     {
         unsigned int addr = 0;
         ret = sdio_readsb(port->func, buf, addr, size);
+    }
+
+    port->in_sdio_uart_irq = NULL;
+
+    return (ret==0)?size:0;
+}
+
+static int sdio_write_inline(struct sdio_func *func, const char* buf, int size)
+{
+    struct sdio_uart_port *port = sdio_get_drvdata(func);
+    int ret;
+
+    if (unlikely(port->in_sdio_uart_irq == current))
+        return 0;
+
+    port->in_sdio_uart_irq = current;
+
+    {
+        unsigned int addr = 0;
+        ret = sdio_writesb(port->func, addr, (char*)buf, size);
     }
 
     port->in_sdio_uart_irq = NULL;
@@ -330,7 +350,7 @@ static void sdio_uart_shutdown(struct sdio_uart_port *port)
 
 	sdio_uart_release_func(port);
 }
-
+/*
 static int sdio_uart_write(struct sdio_uart_port *port, const unsigned char *buf,
 			   int count)
 {
@@ -351,6 +371,27 @@ static int sdio_uart_write(struct sdio_uart_port *port, const unsigned char *buf
 	}
 
 	return ret;
+}
+*/
+
+static int sdio_uart_write(struct sdio_uart_port *port, const char *buf,
+               int count)
+{
+    int ret;
+
+    if (!port->func)
+        return -ENODEV;
+
+    {
+        int err = sdio_uart_claim_func(port);
+        if (!err) {
+            ret = sdio_write_inline(port->func, buf, count);
+            sdio_uart_release_func(port);
+        } else
+            ret = err;
+    }
+
+    return ret;
 }
 
 static int sdio_uart_read(struct sdio_uart_port *port, char *buf, int count)
@@ -435,10 +476,10 @@ static ssize_t sdio_file_write(
     struct sdio_uart_port *port = file->private_data;
     int ret = 0;
     ssize_t write_size = 0;
-    if(debug_info) pr_info("SDIO Driver: write()\n");
     size_t len_write;
+    char data[4096];
 
-    uint8_t data[4096];
+    if(debug_info) pr_info("SDIO Driver: write()\n");
 
     while(len>0)
     {
