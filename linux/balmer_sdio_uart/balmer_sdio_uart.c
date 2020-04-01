@@ -327,7 +327,6 @@ static void sdio_uart_shutdown(struct sdio_uart_port *port)
 	sdio_uart_release_func(port);
 }
 
-//Пока оставить для примера
 static int sdio_uart_write(struct sdio_uart_port *port, const unsigned char *buf,
 			   int count)
 {
