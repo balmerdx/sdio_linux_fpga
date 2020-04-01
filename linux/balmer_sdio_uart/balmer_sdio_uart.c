@@ -153,7 +153,7 @@ static inline void sdio_out(struct sdio_uart_port *port, int offset, u8 value)
 {
     sdio_writeb(port->func, value, offset, NULL);
 }
-
+/*
 static void sdio_uart_receive_chars(struct sdio_uart_port *port,
 				    unsigned int *status)
 {
@@ -183,7 +183,7 @@ static void sdio_uart_receive_chars(struct sdio_uart_port *port,
     ret = kfifo_in_locked(&port->read_fifo, data, count, &port->write_lock);
 #undef RECEIVE_BUFFER_SIZE
 }
-
+*/
 static void sdio_uart_transmit_chars(struct sdio_uart_port *port)
 {
 	struct kfifo *xmit = &port->xmit_fifo;
@@ -237,10 +237,12 @@ static void sdio_uart_irq(struct sdio_func *func)
 
 	port->in_sdio_uart_irq = current;
     status = sdio_in(port, MY_REG_STATUS);
+    /*
     if (status & BIT_STATUS_DR)
     {
         sdio_uart_receive_chars(port, &status);
     }
+    */
 
     if (status & BIT_STATUS_THRE)
     {
@@ -250,11 +252,32 @@ static void sdio_uart_irq(struct sdio_func *func)
 	port->in_sdio_uart_irq = NULL;
 }
 
+//Получаем данные напрямую из вызываемой функции
+static int sdio_receive_inline(struct sdio_func *func, char* buf, int size)
+{
+    struct sdio_uart_port *port = sdio_get_drvdata(func);
+    int ret;
+
+    if (unlikely(port->in_sdio_uart_irq == current))
+        return 0;
+
+    port->in_sdio_uart_irq = current;
+
+    {
+        unsigned int addr = 0;
+        ret = sdio_readsb(port->func, buf, addr, size);
+    }
+
+    port->in_sdio_uart_irq = NULL;
+
+    return (ret==0)?size:0;
+}
+
 static int sdio_uart_activate(struct sdio_uart_port *port)
 {
 	int ret;
 
-    pr_info("SDIO Driver: sdio_uart_activate start\n");
+    if(debug_info) pr_info("SDIO Driver: sdio_uart_activate start\n");
 	kfifo_reset(&port->xmit_fifo);
     kfifo_reset(&port->read_fifo);
 
@@ -262,25 +285,25 @@ static int sdio_uart_activate(struct sdio_uart_port *port)
 	if (ret)
 		return ret;
 
-    pr_info("SDIO Driver: sdio_uart_activate sdio_uart_claim_func ok\n");
+    if(debug_info) pr_info("SDIO Driver: sdio_uart_activate sdio_uart_claim_func ok\n");
 
 	ret = sdio_enable_func(port->func);
 	if (ret)
 		goto err1;
 
-    pr_info("SDIO Driver: sdio_uart_activate sdio_enable_func ok\n");
+    if(debug_info) pr_info("SDIO Driver: sdio_uart_activate sdio_enable_func ok\n");
 	ret = sdio_claim_irq(port->func, sdio_uart_irq);
 	if (ret)
 		goto err2;
 
-    pr_info("SDIO Driver: sdio_uart_activate sdio_claim_irq ok\n");
+    if(debug_info) pr_info("SDIO Driver: sdio_uart_activate sdio_claim_irq ok\n");
     // Kick the IRQ handler once while we're still holding the host lock
 	sdio_uart_irq(port->func);
 
-    pr_info("SDIO Driver: sdio_uart_activate sdio_uart_irq complete\n");
+    if(debug_info) pr_info("SDIO Driver: sdio_uart_activate sdio_uart_irq complete\n");
 	sdio_uart_release_func(port);
 
-    pr_info("SDIO Driver: sdio_uart_activate complete\n");
+    if(debug_info) pr_info("SDIO Driver: sdio_uart_activate complete\n");
 	return 0;
 
 err2:
@@ -326,6 +349,25 @@ static int sdio_uart_write(struct sdio_uart_port *port, const unsigned char *buf
 
 	return ret;
 }
+
+static int sdio_uart_read(struct sdio_uart_port *port, char *buf, int count)
+{
+    int ret;
+
+    if (!port->func)
+        return -ENODEV;
+
+    int err = sdio_uart_claim_func(port);
+    if (!err)
+    {
+        ret = sdio_receive_inline(port->func, buf, count);
+        sdio_uart_release_func(port);
+    } else
+        ret = err;
+
+    return ret;
+}
+
 /*
 static int sdio_uart_write_room(struct sdio_uart_port *port)
 {
@@ -358,17 +400,17 @@ static ssize_t sdio_file_read(struct file *file, char __user *buf, size_t len, l
     size_t len_cur;
     size_t sum_len_out = 0;
     int len_out;
-    uint8_t data[4096];
-
+    char data[4096];
     struct sdio_uart_port *port = file->private_data;
-    pr_info("SDIO Driver: read() magic=%x buf=%x len=%u\n", port->magic, (uint32_t)buf, (uint32_t)len);
+    if(debug_info) pr_info("SDIO Driver: read() magic=%x buf=%x len=%u\n", port->magic, (uint32_t)buf, (uint32_t)len);
 
     while(1)
     {
         len_cur = len;
         if(len_cur>sizeof(data))
             len_cur = sizeof(data);
-        len_out = kfifo_out_locked(&port->read_fifo, data, len_cur, &port->write_lock);
+
+        len_out = sdio_uart_read(port, data, len_cur);
         if(len_out<=0)
             break;
         if (copy_to_user(buf, data, len_out))
@@ -380,7 +422,7 @@ static ssize_t sdio_file_read(struct file *file, char __user *buf, size_t len, l
         buf += len_out;
     }
 
-    pr_info("SDIO Driver: read() sum_len_out=%u\n", (uint32_t)sum_len_out);
+    if(debug_info) pr_info("SDIO Driver: read() sum_len_out=%u\n", (uint32_t)sum_len_out);
     return sum_len_out;
 }
 
