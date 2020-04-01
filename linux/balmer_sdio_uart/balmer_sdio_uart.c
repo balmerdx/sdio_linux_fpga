@@ -335,20 +335,20 @@ static int sdio_uart_write_room(struct sdio_uart_port *port)
 
 static int sdio_file_open(struct inode *inode, struct file *file)
 {
-    pr_info("SDIO Driver: open()\n");
+    if(debug_info)pr_info("SDIO Driver: open()\n");
     struct sdio_uart_port *port;
     port = container_of(inode->i_cdev, struct sdio_uart_port, c_dev);
     file->private_data = port;
-    pr_info("SDIO Driver: open() portidx=%u magic=%x\n", port->index, port->magic);
+    if(debug_info)pr_info("SDIO Driver: open() portidx=%u magic=%x\n", port->index, port->magic);
     return sdio_uart_activate(port);
 }
 
 static int sdio_file_close(struct inode *inode, struct file *file)
 {
-    pr_info("SDIO Driver: close()\n");
+    if(debug_info)pr_info("SDIO Driver: close()\n");
     struct sdio_uart_port *port;
     port = container_of(inode->i_cdev, struct sdio_uart_port, c_dev);
-    pr_info("SDIO Driver: close() portidx=%u\n", port->index);
+    if(debug_info)pr_info("SDIO Driver: close() portidx=%u\n", port->index);
     sdio_uart_shutdown(port);
     return 0;
 }
@@ -358,7 +358,7 @@ static ssize_t sdio_file_read(struct file *file, char __user *buf, size_t len, l
     size_t len_cur;
     size_t sum_len_out = 0;
     int len_out;
-    uint8_t data[256];
+    uint8_t data[4096];
 
     struct sdio_uart_port *port = file->private_data;
     pr_info("SDIO Driver: read() magic=%x buf=%x len=%u\n", port->magic, (uint32_t)buf, (uint32_t)len);
@@ -393,7 +393,7 @@ static ssize_t sdio_file_write(
     if(debug_info) pr_info("SDIO Driver: write()\n");
     size_t len_write;
 
-    uint8_t data[256];
+    uint8_t data[4096];
 
     while(len>0)
     {
@@ -430,7 +430,7 @@ static int sdio_uart_probe(struct sdio_func *func,
 	int ret;
     dev_t dev_idx;
 
-    pr_warn("sdio_uart_probe start");
+    if(debug_info)pr_warn("sdio_uart_probe start");
 
 	port = kzalloc(sizeof(struct sdio_uart_port), GFP_KERNEL);
 	if (!port)
@@ -464,7 +464,7 @@ static int sdio_uart_probe(struct sdio_func *func,
         ret = PTR_ERR(port->file_dev);
     }
 
-    pr_warn("sdio_uart_probe device_create ok");
+    if(debug_info)pr_warn("sdio_uart_probe device_create ok");
     //port->file_dev->driver_data = port;
 
     cdev_init(&port->c_dev, &sdio_uart_proc_fops);
@@ -473,7 +473,7 @@ static int sdio_uart_probe(struct sdio_func *func,
         goto err2;
     }
 
-    pr_warn("sdio_uart_probe all ok");
+    if(debug_info)pr_warn("sdio_uart_probe all ok");
 	return ret;
 err2:
     device_destroy(balmer_class, dev_idx);
@@ -484,7 +484,7 @@ err1:
 
 static void sdio_uart_remove(struct sdio_func *func)
 {
-    pr_warn("sdio_uart_remove start");
+    if(debug_info)pr_warn("sdio_uart_remove start");
 	struct sdio_uart_port *port = sdio_get_drvdata(func);
 
     device_destroy(balmer_class, balmer_dev_t+port->index);
@@ -493,7 +493,7 @@ static void sdio_uart_remove(struct sdio_func *func)
     kfree(port);
 
     sdio_uart_port_remove(port);
-    pr_warn("sdio_uart_remove complete");
+    if(debug_info)pr_warn("sdio_uart_remove complete");
 }
 
 static const struct sdio_device_id sdio_uart_ids[] = {
@@ -513,11 +513,11 @@ static struct sdio_driver sdio_uart_driver = {
 static int __init sdio_uart_init(void)
 {
 	int ret;
-    pr_warn("sdio_uart_init start");
+    if(debug_info)pr_warn("sdio_uart_init start");
     if ((ret = alloc_chrdev_region(&balmer_dev_t, 0, 1, "balmer_dev_t")) < 0)
         return ret;
 
-    pr_warn("sdio_uart_init alloc_chrdev_region ok");
+    if(debug_info)pr_warn("sdio_uart_init alloc_chrdev_region ok");
     balmer_class = class_create(THIS_MODULE, "balmer_sdio");
 
     if (IS_ERR(balmer_class))
@@ -530,7 +530,7 @@ static int __init sdio_uart_init(void)
 	if (ret)
 		goto err2;
 
-    pr_warn("sdio_uart_init complete");
+    if(debug_info)pr_warn("sdio_uart_init complete");
 	return 0;
 err2:
     class_destroy(balmer_class);
