@@ -188,7 +188,11 @@ static void sdio_uart_transmit_chars(struct sdio_uart_port *port)
 {
 	struct kfifo *xmit = &port->xmit_fifo;
 	int count;
-    const int size = 256;
+
+    //Кажется здесь требуется число, кратное 4-м байтам
+    //Максимум, что можно отослать 511 байт
+    const int size = 512-4;
+    //const int size = 256;
     u8 iobuf[size];
 	int len;
 
