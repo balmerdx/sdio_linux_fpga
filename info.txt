@@ -21,6 +21,9 @@ make balmer_sdio_uart-rebuild BR2_EXTERNAL=/home/balmer/radio/pi/buildroot/my_bu
 чтобы загрузить - надо перейти в эту директорию и написать 
 wget http://192.168.1.38:8000/balmer_sdio_uart.ko
 modprobe balmer_sdio_uart.ko
+Выгрузить модуль
+modprobe -r balmer_sdio_uart.ko
 
 Либо (из любой директории)
 insmod /lib/modules/4.14.14-licheepi-zero/extra/balmer_sdio_uart.ko
+

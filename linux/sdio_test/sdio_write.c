@@ -1,8 +1,9 @@
+#include <stdint.h>
 #include <stdio.h>
-#include <fcntl.h>   /* File Control Definitions           */
-#include <termios.h> /* POSIX Terminal Control Definitions */
-#include <unistd.h>  /* UNIX Standard Definitions 	   */ 
-#include <errno.h>   /* ERROR Number Definitions           */
+#include <fcntl.h> 
+#include <termios.h>
+#include <unistd.h>
+#include <errno.h>
 #include <time.h>
 
 const char* device_name = "/dev/balmerSDIO0";
@@ -28,41 +29,48 @@ int msleep(long msec)
     return res;
 }
 
+uint64_t TimeUsec()
+{
+	struct timespec ts;
+	timespec_get(&ts, TIME_UTC);
+    return ts.tv_sec*(uint64_t)1000000+ts.tv_nsec/1000;
+}
+
 int main(void)
 {
-   	int fd;/*File Descriptor*/
+   	int fd;
 	
 	printf("\n +----------------------------------+");
 	printf("\n |         SDIO Port Read           |");
 	printf("\n +----------------------------------+");
 
-	/*------------------------------- Opening the Serial Port -------------------------------*/
-
-	/* Change /dev/ttyUSB0 to the one corresponding to your system */
-
 	fd = open(device_name,O_RDWR);
 	if(fd == -1)						/* Error Checking */
-    	   printf("\n  Error! in Opening %s  ", device_name);
+		printf("\n  Error! in Opening %s  ", device_name);
 	else
-    	   printf("\n  %s Opened Successfully ", device_name);
+		printf("\n  %s Opened Successfully ", device_name);
 
-
-
-	/*------------------------------- Read data from serial port -----------------------------*/
-	static char write_buffer[32];   // Buffer to store the data received
-	int  bytes_write = 0;    /* Number of bytes read by the read() system call */
+	static char write_buffer[4096];
+	int  bytes_write = 0;
 	int i = 0;
 	for(i=0;i<sizeof(write_buffer); i++)
-		write_buffer[i] = i+0xA2;
+	{
+		if(i&1)
+			write_buffer[i] = i>>8;
+		else
+			write_buffer[i] = i;
+	}
 
 	printf("\n  Before write addr=%x\n", (unsigned int)write_buffer);
-	msleep(100);
-	bytes_write = write(fd, write_buffer, sizeof(write_buffer)); // Read the data
-	printf("\n  After write\n");
-		
-	printf("\n\n  Bytes write=%d", bytes_write); /* Print the number of bytes read */
-	printf("\n\n  ");
+	//msleep(100);
 
+	uint64_t start_usec = TimeUsec();
+	bytes_write = write(fd, write_buffer, sizeof(write_buffer));
+	uint64_t end_usec = TimeUsec();
+	printf("\n  Delta tume %i usec\n", (int)(end_usec-start_usec));
+		
+	printf("\n\n  Bytes write=%d", bytes_write);
+	printf("\n\n  ");
 	close(fd);
 
 	return 0;

@@ -37,6 +37,8 @@
 #define MY_REG_TX 0
 #define MY_REG_STATUS 1
 
+bool debug_info = false;
+
 //data ready
 #define BIT_STATUS_DR 0x01
 //transmit empty
@@ -171,7 +173,7 @@ static void sdio_uart_receive_chars(struct sdio_uart_port *port,
     {
         unsigned int addr = 0;
         ret = sdio_readsb(port->func, data, addr, RECEIVE_BUFFER_SIZE);
-        pr_info("SDIO Driver: sdio_uart_receive_chars sdio_readsb=%i\n", ret);
+        if(debug_info) pr_info("SDIO Driver: sdio_uart_receive_chars sdio_readsb=%i\n", ret);
         if(ret!=0)
             return;
         count = RECEIVE_BUFFER_SIZE;
@@ -186,26 +188,32 @@ static void sdio_uart_transmit_chars(struct sdio_uart_port *port)
 {
 	struct kfifo *xmit = &port->xmit_fifo;
 	int count;
-	u8 iobuf[16];
+    const int size = 256;
+    u8 iobuf[size];
 	int len;
 
     if (!kfifo_len(xmit)) {
 		return;
 	}
 
-	len = kfifo_out_locked(xmit, iobuf, 16, &port->write_lock);
-
     if(0)
     {
+        len = kfifo_out_locked(xmit, iobuf, size, &port->write_lock);
         for (count = 0; count < len; count++) {
             sdio_out(port, MY_REG_TX, iobuf[count]);
         }
     } else
     {
-        sdio_writesb(port->func, 0, iobuf, len);
+        while(1)
+        {
+            len = kfifo_out_locked(xmit, iobuf, size, &port->write_lock);
+            if(len<=0)
+                break;
+            sdio_writesb(port->func, 0, iobuf, len);
+        }
     }
 
-    len = kfifo_len(xmit); //test code
+    //len = kfifo_len(xmit); //test code
 }
 
 /*
@@ -380,20 +388,31 @@ static ssize_t sdio_file_write(
         struct file *file, const char __user *buf, size_t len, loff_t *off)
 {
     struct sdio_uart_port *port = file->private_data;
-    int ret;
-    pr_info("SDIO Driver: write()\n");
+    int ret = 0;
+    ssize_t write_size = 0;
+    if(debug_info) pr_info("SDIO Driver: write()\n");
+    size_t len_write;
 
     uint8_t data[256];
-    if(len>sizeof(data)) //Пока так пускай будет. Затычка временная.
-        len = sizeof(data);
 
-    ret = copy_from_user(data, buf, len);
-    if(ret==0)
-        ret = sdio_uart_write(port, data, len);
-    else
-        pr_info("SDIO Driver: write() copy_from_user failed\n");
-    pr_info("SDIO Driver: write() len=%u, ret=%i\n", (uint32_t)len, ret);
-    return ret;
+    while(len>0)
+    {
+        len_write = len;
+        if(len_write > sizeof(data))
+            len_write = sizeof(data);
+
+        ret = copy_from_user(data, buf, len_write);
+        if(ret==0)
+            write_size += sdio_uart_write(port, data, len_write);
+        else
+            pr_info("SDIO Driver: write() copy_from_user failed\n");
+
+        buf += len_write;
+        len -= len_write;
+    }
+
+    if(debug_info) pr_info("SDIO Driver: write() len=%u, ret=%i\n", (uint32_t)len, ret);
+    return write_size;
 }
 
 static const struct file_operations sdio_uart_proc_fops = {

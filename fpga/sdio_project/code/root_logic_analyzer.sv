@@ -125,6 +125,9 @@ bit response_data_empty = 0;
 bit response_data_strobe = 0;
 bit response_data_req;
 byte response_data;
+
+bit read_byte_strobe;
+byte read_byte;
 	
 //2 66 - clk
 //3 67 - cmd
@@ -132,7 +135,7 @@ byte response_data;
 //5 69 - D1
 //6 70 - D2
 //7 71 - D3
-
+/*
 logic_analyzer_controller_200mhz_serial48 logic_analyzer_controller0(
 		.clock(clock50mhz),
 		.clock200mhz(clock200mhz),
@@ -155,6 +158,7 @@ logic_analyzer_controller_200mhz_serial48 logic_analyzer_controller0(
 		.logic_clock(sd_clock),
 		.logic_serial(sd_cmd)
 		);
+*/		
 /*		
 logic_analyzer_controller_quadspi logic_analyzer_controller0(
 		.clock(clock50mhz),
@@ -183,6 +187,32 @@ logic_analyzer_controller_quadspi logic_analyzer_controller0(
 		.data_count(data4_count)
 		);
 */
+
+logic_analyzer_controller_bytecopy(
+		.clock(clock50mhz),
+		//Командный интерфейс
+		.dev_command_started(dev_command_started_la),
+		.dev_command_processing(dev_command_processing_la),
+		.dev_command(dev_command[4:0]),
+		.dev_busy(dev_busy_la),
+		.dev_command_data_signal(dev_command_data_signal_la),
+		.dev_data(dev_data),
+		
+		//uart out
+		.uart_tx_send_byte(uart_tx_send_byte_la),
+		.uart_tx_byte(uart_tx_byte_la),
+		.uart_tx_active(uart_tx_active),
+		
+		//led
+		.led_full(led_full_la),
+		
+		//Данные, которые мы пишем
+		.data_clock(clock200mhz),
+		.data_strobe(read_byte_strobe),
+		.data(read_byte)
+		);
+
+
 sdio_slave sdio_slave0(
 	.clock(clock200mhz),
 	.sd_clock(sd_clock),
@@ -197,9 +227,13 @@ sdio_slave sdio_slave0(
 	.response_data_empty(response_data_empty),
 	.response_data_strobe(response_data_strobe),
 	.response_data_req(response_data_req),
-	.response_data(response_data)
+	.response_data(response_data),
 	
+	.read_byte_strobe(read_byte_strobe),
+	.read_all_strobe(),
+	.read_byte(read_byte),
 );
+
 
 bit[2:0] dev_command_top;
 assign dev_command_top = dev_command[7:5];
